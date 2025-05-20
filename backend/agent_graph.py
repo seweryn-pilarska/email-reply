@@ -45,7 +45,6 @@ Respond with only the intent label.
     )
 
     intent = response.choices[0].message.content.strip()
-    # print("Detected intent:")
     return {"email": email, "intent": intent}
 
 def schedule_meeting_node(state: dict) -> dict:
@@ -84,7 +83,6 @@ def default_reply_node(state: dict) -> dict:
 
 def route_by_intent(state: dict) -> str:
     intent = state.get("intent", "Other")
-    # print("Routing intent:")
 
     if intent == "ScheduleMeeting":
         return "ScheduleAgent"
