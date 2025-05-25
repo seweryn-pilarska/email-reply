@@ -91,8 +91,14 @@ Only return valid JSON with these exact keys and no extra explanation.
 
 @traceable(name="ScheduleAgent")
 def schedule_meeting_node(state: dict) -> dict:
-    start = f"{state['date']}T{state['start_time']}:00Z"
-    end = f"{state['date']}T{state['end_time']}:00Z"
+
+    required = ["summary", "attendee_email", "date", "start_time", "end_time"]
+    missing = [key for key in required if key not in state]
+    if missing:
+        return {"reply": f"Cannot schedule meeting. Missing: {', '.join(missing)}"}
+
+    start = f"{state['date']}T{state['start_time']}:00+02:00"
+    end = f"{state['date']}T{state['end_time']}:00+02:00"
 
     payload = {
         "summary": state["summary"],
@@ -122,7 +128,24 @@ def schedule_meeting_node(state: dict) -> dict:
 
         if response.status_code == 201:
             result = response.json()
-            reply = f"Meeting scheduled!\nSummary: {state['summary']}\nTime: {state['start_time']} on {state['date']}"
+            event_summary = state["summary"]
+            event_time = f"{state['start_time']} on {state['date']}"
+            meet_link = result.get("hangoutLink") or result.get("htmlLink")
+
+            reply_prompt = (
+                f"Write a one-sentence email confirming a meeting titled '{event_summary}' "
+                f"on {event_time} with {state['attendee_email']}. "
+                f"Include the Google Meet link: {meet_link}"
+            )
+
+            gpt_response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                temperature=0.5,
+                messages=[{"role": "user", "content": reply_prompt}]
+            )
+
+            reply = gpt_response.choices[0].message.content.strip()
+
         else:
             reply = f"Failed to schedule meeting. Status: {response.status_code}"
     except Exception as e:
