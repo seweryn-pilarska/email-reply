@@ -7,6 +7,7 @@ from openai import OpenAI
 import requests
 import datetime
 import json
+from langsmith import traceable
 
 load_dotenv(dotenv_path="config/.env")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -14,6 +15,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 class GraphState(dict):
     pass
 
+@traceable(name="IntentDetector")
 def detect_intent_node(state: dict) -> dict:
     email = state["email"]
     prompt = prompt = f"""
@@ -50,6 +52,7 @@ Respond with only the intent label.
     intent = response.choices[0].message.content.strip()
     return {"email": email, "intent": intent}
 
+@traceable(name="ExtractMeetingInfo")
 def extract_meeting_info_node(state: dict) -> dict:
     email_text = state["email"]
     today = datetime.date.today().isoformat()
@@ -86,6 +89,7 @@ Only return valid JSON with these exact keys and no extra explanation.
     except Exception as e:
         return {**state, "reply": "Failed to extract meeting info. Please try rephrasing."}
 
+@traceable(name="ScheduleAgent")
 def schedule_meeting_node(state: dict) -> dict:
     start = f"{state['date']}T{state['start_time']}:00Z"
     end = f"{state['date']}T{state['end_time']}:00Z"
@@ -125,6 +129,7 @@ def schedule_meeting_node(state: dict) -> dict:
         reply = f"Exception during scheduling: {str(e)}"
     return {"reply": reply}
 
+@traceable(name="ComplaintAgent")
 def complaint_handler_node(state: dict) -> dict:
     email = state["email"]
     prompt = f"The user is upset. Write a professional, apologetic response.\nEmail: {email}"
@@ -136,6 +141,7 @@ def complaint_handler_node(state: dict) -> dict:
     reply = response.choices[0].message.content.strip()
     return {"reply": reply}
 
+@traceable(name="DefaultReplyAgent")
 def default_reply_node(state: dict) -> dict:
     email = state["email"]
     intent = state["intent"]
@@ -148,6 +154,7 @@ def default_reply_node(state: dict) -> dict:
     reply = response.choices[0].message.content.strip()
     return {"reply": reply}
 
+@traceable(name="IntentRouter")
 def route_by_intent(state: dict) -> str:
     intent = state.get("intent", "Other")
 
