@@ -91,8 +91,8 @@ Only return valid JSON with these exact keys and no extra explanation.
 
 @traceable(name="ScheduleAgent")
 def schedule_meeting_node(state: dict) -> dict:
-    start = f"{state['date']}T{state['start_time']}:00Z"
-    end = f"{state['date']}T{state['end_time']}:00Z"
+    start = f"{state['date']}T{state['start_time']}:00+02:00"
+    end = f"{state['date']}T{state['end_time']}:00+02:00"
 
     payload = {
         "summary": state["summary"],
