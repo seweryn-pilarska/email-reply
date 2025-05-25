@@ -91,6 +91,12 @@ Only return valid JSON with these exact keys and no extra explanation.
 
 @traceable(name="ScheduleAgent")
 def schedule_meeting_node(state: dict) -> dict:
+
+    required = ["summary", "attendee_email", "date", "start_time", "end_time"]
+    missing = [key for key in required if key not in state]
+    if missing:
+        return {"reply": f"Cannot schedule meeting. Missing: {', '.join(missing)}"}
+
     start = f"{state['date']}T{state['start_time']}:00+02:00"
     end = f"{state['date']}T{state['end_time']}:00+02:00"
 
@@ -142,7 +148,6 @@ def schedule_meeting_node(state: dict) -> dict:
 
         else:
             reply = f"Failed to schedule meeting. Status: {response.status_code}"
-
     except Exception as e:
         reply = f"Exception during scheduling: {str(e)}"
     return {"reply": reply}
