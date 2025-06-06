@@ -1,2 +1,10 @@
 .venv/
 config/.env
+mcp_tools/calendar-mcp/token.json
+mcp_tools/calendar-mcp/example.env
+mcp_tools/.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
